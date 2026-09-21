@@ -10,7 +10,7 @@
 
 import { useEffect, useRef } from 'react'
 import cytoscape from 'cytoscape'
-import { Maximize2 } from 'lucide-react'
+import { Focus, Maximize2, ZoomIn, ZoomOut } from 'lucide-react'
 import { nodeStates, orderColumns, type Highlight } from '../graphLayout'
 import { currentTheme, useTheme } from '../theme'
 import type { Graph, GraphNode } from '../types'
@@ -36,18 +36,45 @@ function displayLabel(node: GraphNode, highlight: Highlight | undefined): string
 const ROW_GAP = 60
 const CLASS_COLUMN_X = 470
 
-/** Feste Positionen: zwei Spalten in der gemeinsamen Reihenfolge. */
-function place(graph: Graph): Record<string, { x: number; y: number }> {
-  const { useCases, classes } = orderColumns(graph)
+/** Feste Positionen: zwei Spalten in der gemeinsamen Reihenfolge, optional kompakt nur fuer sichtbare Knoten. */
+function place(
+  graph: Graph,
+  visibleIds?: Set<string> | null,
+): {
+  positions: Record<string, { x: number; y: number }>
+  headerUc: { x: number; y: number }
+  headerClass: { x: number; y: number }
+  useCaseCount: number
+  classCount: number
+} {
+  const { useCases, classes } = orderColumns(graph, visibleIds)
   const positions: Record<string, { x: number; y: number }> = {}
-  const height = Math.max(useCases.length, classes.length)
+  const height = Math.max(useCases.length, classes.length, 1)
+
   useCases.forEach((n, i) => {
     positions[n.id] = { x: 0, y: (i + (height - useCases.length) / 2) * ROW_GAP }
   })
   classes.forEach((n, i) => {
     positions[n.id] = { x: CLASS_COLUMN_X, y: (i + (height - classes.length) / 2) * ROW_GAP }
   })
-  return positions
+
+  // Falls Knoten ausgeblendet sind, erhalten sie eine Rueckfallposition
+  graph.nodes.forEach((n) => {
+    if (!positions[n.id]) {
+      positions[n.id] = { x: n.kind === 'use_case' ? 0 : CLASS_COLUMN_X, y: 0 }
+    }
+  })
+
+  const minUcY = useCases.length > 0 ? Math.min(...useCases.map((n) => positions[n.id].y)) : 0
+  const minClsY = classes.length > 0 ? Math.min(...classes.map((n) => positions[n.id].y)) : 0
+
+  return {
+    positions,
+    headerUc: { x: 0, y: minUcY - ROW_GAP * 0.85 },
+    headerClass: { x: CLASS_COLUMN_X, y: minClsY - ROW_GAP * 0.85 },
+    useCaseCount: useCases.length,
+    classCount: classes.length,
+  }
 }
 
 /** Eine weiche S-Kurve von links nach rechts: waagerecht am Start und am Ziel.
@@ -237,7 +264,7 @@ export function GraphView({ graph, highlights, visibleIds, initialSelection, onS
   useEffect(() => {
     const container = containerRef.current
     if (container === null) return
-    const positions = place(graph)
+    const { positions, headerUc, headerClass, useCaseCount, classCount } = place(graph, null)
 
     const cy = cytoscape({
       container,
@@ -256,8 +283,8 @@ export function GraphView({ graph, highlights, visibleIds, initialSelection, onS
         // Ueberschriften ueber den Spalten
         {
           group: 'nodes' as const,
-          data: { id: 'header:uc', display: 'Use Cases' },
-          position: { x: 0, y: -ROW_GAP * 0.85 },
+          data: { id: 'header:uc', display: `Use Cases (${useCaseCount})` },
+          position: headerUc,
           classes: 'header',
           selectable: false,
           grabbable: false,
@@ -265,8 +292,8 @@ export function GraphView({ graph, highlights, visibleIds, initialSelection, onS
         },
         {
           group: 'nodes' as const,
-          data: { id: 'header:class', display: 'Klassen' },
-          position: { x: CLASS_COLUMN_X, y: -ROW_GAP * 0.85 },
+          data: { id: 'header:class', display: `Klassen (${classCount})` },
+          position: headerClass,
           classes: 'header',
           selectable: false,
           grabbable: false,
@@ -282,8 +309,8 @@ export function GraphView({ graph, highlights, visibleIds, initialSelection, onS
       boxSelectionEnabled: true,
       // Die Anordnung hat keine Bedeutung. Deshalb lassen sich Knoten nicht verschieben.
       autoungrabify: true,
-      minZoom: 0.25,
-      maxZoom: 2.5,
+      minZoom: 0.05,
+      maxZoom: 3.5,
     })
 
     applyCurves(cy)
@@ -311,6 +338,12 @@ export function GraphView({ graph, highlights, visibleIds, initialSelection, onS
     cy.on('mouseout', 'node[kind]', () => {
       cy.elements().removeClass('dim focus')
       container.style.cursor = 'default'
+    })
+
+    // Doppelklick auf einen Knoten zoomt auf diesen und seine direkten Nachbarn
+    cy.on('dblclick', 'node[kind]', (event) => {
+      const target = event.target
+      cy.fit(target.closedNeighborhood().not('.hidden'), FIT_PADDING)
     })
 
     // Die Schrift laedt nach; danach neu zeichnen, damit sie im Graphen erscheint.
@@ -351,21 +384,76 @@ export function GraphView({ graph, highlights, visibleIds, initialSelection, onS
     })
   }, [graph, highlights])
 
-  // Nur einen Teilgraphen zeigen. Die Positionen bleiben dabei unveraendert.
+  // Nur einen Teilgraphen zeigen: Positionen dynamisch kompakt neu anordnen und Kurven anpassen.
   useEffect(() => {
     const cy = cyRef.current
     if (cy === null) return
+
+    const { positions, headerUc, headerClass, useCaseCount, classCount } = place(graph, visibleIds)
+
     cy.batch(() => {
+      // 1. Zustaende und Positionen fuer Knoten aktualisieren
       cy.nodes('[kind]').forEach((node) => {
-        node.toggleClass('hidden', visibleIds !== null && !visibleIds.has(node.id()))
+        const isHidden = visibleIds !== null && !visibleIds.has(node.id())
+        node.toggleClass('hidden', isHidden)
+        if (!isHidden && positions[node.id()]) {
+          node.position(positions[node.id()])
+        }
       })
+
+      // 2. Spaltenueberschriften anpassen & positionieren
+      const ucHeader = cy.getElementById('header:uc')
+      const clsHeader = cy.getElementById('header:class')
+      if (ucHeader.nonempty()) {
+        ucHeader.position(headerUc)
+        ucHeader.data('display', `Use Cases (${useCaseCount})`)
+      }
+      if (clsHeader.nonempty()) {
+        clsHeader.position(headerClass)
+        clsHeader.data('display', `Klassen (${classCount})`)
+      }
+
+      // 3. Kanten ein-/ausblenden
       cy.edges().forEach((edge) => {
-        const hide = visibleIds !== null && (!visibleIds.has(edge.source().id()) || !visibleIds.has(edge.target().id()))
+        const hide =
+          visibleIds !== null && (!visibleIds.has(edge.source().id()) || !visibleIds.has(edge.target().id()))
         edge.toggleClass('hidden', hide)
       })
     })
-    cy.fit(cy.nodes().not('.hidden'), FIT_PADDING)
+
+    applyCurves(cy)
+    const visibleNodes = cy.nodes().not('.hidden')
+    cy.fit(visibleNodes, FIT_PADDING)
   }, [graph, visibleIds])
+
+  function handleZoomIn() {
+    const cy = cyRef.current
+    if (!cy) return
+    cy.zoom({ level: cy.zoom() * 1.3, position: { x: cy.width() / 2, y: cy.height() / 2 } })
+  }
+
+  function handleZoomOut() {
+    const cy = cyRef.current
+    if (!cy) return
+    cy.zoom({ level: cy.zoom() / 1.3, position: { x: cy.width() / 2, y: cy.height() / 2 } })
+  }
+
+  function handleFit() {
+    const cy = cyRef.current
+    if (!cy) return
+    cy.fit(cy.nodes().not('.hidden'), FIT_PADDING)
+  }
+
+  function handleFocusSelection() {
+    const cy = cyRef.current
+    if (!cy) return
+    const sel = cy.nodes(':selected').not('.hidden')
+    if (sel.nonempty()) {
+      cy.fit(sel.closedNeighborhood().not('.hidden'), FIT_PADDING)
+    } else {
+      cy.fit(cy.nodes().not('.hidden'), FIT_PADDING)
+    }
+  }
 
   return (
     <div className="relative">
@@ -375,14 +463,42 @@ export function GraphView({ graph, highlights, visibleIds, initialSelection, onS
         className="h-[62vh] min-h-[480px] bg-[radial-gradient(var(--dot)_1px,transparent_1px)] [background-size:20px_20px] lg:h-[calc(100vh-15.5rem)]"
       />
 
-      {/* Schwebende Bedienelemente ueber dem Graphen */}
-      <button
-        className="btn btn-sm absolute top-4 right-4"
-        onClick={() => cyRef.current?.fit(cyRef.current.nodes().not('.hidden'), FIT_PADDING)}
-      >
-        <Maximize2 className="size-3.5" aria-hidden />
-        Ansicht einpassen
-      </button>
+      {/* Schwebende Bedienelemente fuer Zoom und Navigation */}
+      <div className="glass absolute top-4 right-4 flex items-center gap-1 rounded-xl p-1 shadow-sm">
+        <button
+          className="btn btn-quiet btn-sm !p-1.5"
+          onClick={handleZoomIn}
+          title="Vergrößern"
+          aria-label="Vergrößern"
+        >
+          <ZoomIn className="size-4" aria-hidden />
+        </button>
+        <button
+          className="btn btn-quiet btn-sm !p-1.5"
+          onClick={handleZoomOut}
+          title="Verkleinern"
+          aria-label="Verkleinern"
+        >
+          <ZoomOut className="size-4" aria-hidden />
+        </button>
+        <button
+          className="btn btn-quiet btn-sm !p-1.5"
+          onClick={handleFocusSelection}
+          title="Auf Auswahl fokussieren"
+          aria-label="Auf Auswahl fokussieren"
+        >
+          <Focus className="size-4" aria-hidden />
+        </button>
+        <div className="mx-0.5 h-4 w-px bg-slate-300" aria-hidden />
+        <button
+          className="btn btn-quiet btn-sm gap-1.5 !px-2.5 !py-1 text-xs font-medium"
+          onClick={handleFit}
+          title="Ansicht einpassen"
+        >
+          <Maximize2 className="size-3.5" aria-hidden />
+          Einpassen
+        </button>
+      </div>
 
       <ul className="glass absolute inset-x-4 bottom-4 flex flex-wrap gap-x-4 gap-y-1 rounded-xl px-3.5 py-2 text-xs text-slate-600 shadow-sm">
         {legendFor(palette).map((item) => (

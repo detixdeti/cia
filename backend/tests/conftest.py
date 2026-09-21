@@ -18,6 +18,7 @@ TEST_BASELINE = BaselineId("test-baseline")
 
 #: Pfad zum synthetischen Beispielprojekt.
 FIXTURE_ROOT = Path(__file__).resolve().parents[2] / "fixtures" / "sample-project"
+ECOMMERCE_FIXTURE_ROOT = Path(__file__).resolve().parents[2] / "fixtures" / "ecommerce-platform"
 
 
 def make_baseline(
@@ -95,3 +96,10 @@ def fixture_root() -> Path:
     if not FIXTURE_ROOT.is_dir():
         pytest.skip(f"Beispielprojekt fehlt: {FIXTURE_ROOT}")
     return FIXTURE_ROOT
+
+
+@pytest.fixture(scope="session")
+def ecommerce_fixture_root() -> Path:
+    if not ECOMMERCE_FIXTURE_ROOT.is_dir():
+        pytest.skip(f"E-Commerce-Projekt fehlt: {ECOMMERCE_FIXTURE_ROOT}")
+    return ECOMMERCE_FIXTURE_ROOT

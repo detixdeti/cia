@@ -12,6 +12,8 @@ import {
   Link2,
   MousePointerClick,
   Network,
+  Search,
+  X,
   type LucideIcon,
 } from 'lucide-react'
 import { api } from '../api'
@@ -81,6 +83,7 @@ export function Workspace({ baselineId }: { baselineId: string }) {
 
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [onlySubgraph, setOnlySubgraph] = useState(false)
+  const [search, setSearch] = useState('')
   const [tab, setTab] = useState<Tab>('auswahl')
   const [currentId, setCurrentId] = useState<string | null>(null)
   const [showReport, setShowReport] = useState(false)
@@ -124,10 +127,27 @@ export function Workspace({ baselineId }: { baselineId: string }) {
     return result
   }, [selection.data, subgraph.data])
 
-  const visibleIds = useMemo(
-    () => (onlySubgraph && subgraph.data ? new Set(subgraph.data.nodes.map((n) => n.id)) : null),
-    [onlySubgraph, subgraph.data],
-  )
+  const visibleIds = useMemo(() => {
+    if (search.trim() && graph.data) {
+      const q = search.trim().toLowerCase()
+      const matching = graph.data.nodes.filter(
+        (n) => n.ref.toLowerCase().includes(q) || n.label.toLowerCase().includes(q),
+      )
+      const searchIds = new Set<string>()
+      matching.forEach((n) => searchIds.add(n.id))
+      graph.data.edges.forEach((e) => {
+        if (matching.some((m) => m.id === e.source || m.id === e.target)) {
+          searchIds.add(e.source)
+          searchIds.add(e.target)
+        }
+      })
+      return searchIds
+    }
+    if (onlySubgraph && subgraph.data) {
+      return new Set(subgraph.data.nodes.map((n) => n.id))
+    }
+    return null
+  }, [onlySubgraph, subgraph.data, search, graph.data])
 
   function selectScenario(id: string) {
     setCurrentId(id)
@@ -169,11 +189,43 @@ export function Workspace({ baselineId }: { baselineId: string }) {
               <h2 className="text-sm font-semibold tracking-tight text-slate-900">Zuordnungen</h2>
               <p className="text-xs text-slate-500">
                 {view === 'graph'
-                  ? 'Klick wählt aus, Umschalt+Klick mehrere. Die Anordnung hat keine Bedeutung.'
+                  ? 'Klick wählt aus, Umschalt+Klick mehrere. Doppelklick fokussiert.'
                   : 'Zeilen sind Use Cases, Spalten Klassen. Ein Punkt ist ein deklarierter Link.'}
               </p>
             </div>
-            <ViewSwitch view={view} onChange={setView} />
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative flex items-center">
+                <Search className="pointer-events-none absolute left-2.5 size-3.5 text-slate-400" aria-hidden />
+                <input
+                  type="text"
+                  placeholder="Suchen (z.B. UC20, Cart)..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="input h-8 w-44 rounded-lg py-1 pr-7 pl-8 text-xs placeholder:text-slate-400"
+                />
+                {search && (
+                  <button
+                    onClick={() => setSearch('')}
+                    className="absolute right-2 text-slate-400 hover:text-slate-600"
+                    title="Suche leeren"
+                  >
+                    <X className="size-3.5" />
+                  </button>
+                )}
+              </div>
+              {selectedIds.length > 0 && (
+                <button
+                  onClick={() => setOnlySubgraph(!onlySubgraph)}
+                  className={`btn btn-sm text-xs font-medium ${
+                    onlySubgraph ? 'border-indigo-500 bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200' : ''
+                  }`}
+                  title={onlySubgraph ? 'Gesamten Graphen anzeigen' : 'Nur ausgewählten Teilgraphen anzeigen'}
+                >
+                  {onlySubgraph ? 'Gesamtgraph' : 'Nur Teilgraph'}
+                </button>
+              )}
+              <ViewSwitch view={view} onChange={setView} />
+            </div>
           </div>
           <ErrorBox problems={graph.error} />
           {graph.data ? (

@@ -19,8 +19,9 @@ from ..llm.demo import DemoProvider
 from .app import create_app
 
 _autoload = os.environ.get("CIA_AUTOLOAD_PROJECT")
+_autoload_paths = [Path(p.strip()).expanduser() for p in _autoload.split(":") if p.strip()] if _autoload else None
 app = create_app(
-    autoload=Path(_autoload).expanduser() if _autoload else None,
+    autoload=_autoload_paths,
     provider=DemoProvider() if os.environ.get("CIA_LLM") == "demo" else None,
     protocol_dir=Path(os.environ.get("CIA_PROTOCOL_DIR", "protocol")),
     cors_origins=[o.strip() for o in os.environ["CIA_CORS_ORIGINS"].split(",")]

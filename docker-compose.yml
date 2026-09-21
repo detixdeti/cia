@@ -13,9 +13,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # Beim Start importierter Projektstand. Der Import liest nur diesen Pfad
-      # im Container, nicht beliebige Verzeichnisse des Rechners.
-      CIA_AUTOLOAD_PROJECT: /fixtures/sample-project
+      # Beim Start importierte Projektstaende (mehrere mit Doppelpunkt getrennt).
+      CIA_AUTOLOAD_PROJECT: /fixtures/sample-project:/fixtures/ecommerce-platform
       # Das Protokoll (eine .jsonl-Datei je Szenario) landet in ./protocol auf
       # dem Rechner und uebersteht damit einen Neustart des Containers.
       CIA_PROTOCOL_DIR: /protocol

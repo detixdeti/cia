@@ -30,13 +30,18 @@ function byName(a: GraphNode, b: GraphNode): number {
 
 /** Reihenfolge der Use Cases und Klassen: Use Cases nach Kennung, Klassen nach
  *  dem Mittelwert ihrer Use Cases. Das rueckt Verwandtes zusammen und spart
- *  Kreuzungen, bleibt aber reproduzierbar. */
-export function orderColumns(graph: Graph): { useCases: GraphNode[]; classes: GraphNode[] } {
-  const useCases = graph.nodes.filter((n) => n.kind === 'use_case').sort(byName)
+ *  Kreuzungen, bleibt aber reproduzierbar. Optional gefiltert auf sichtbare Knoten. */
+export function orderColumns(
+  graph: Graph,
+  visibleIds?: Set<string> | null,
+): { useCases: GraphNode[]; classes: GraphNode[] } {
+  const isVisible = (n: GraphNode) => !visibleIds || visibleIds.has(n.id)
+  const useCases = graph.nodes.filter((n) => n.kind === 'use_case' && isVisible(n)).sort(byName)
   const rank = new Map(useCases.map((n, i) => [n.id, i]))
 
   const ranks = new Map<string, number[]>()
   for (const edge of graph.edges) {
+    if (!isVisible({ id: edge.source } as GraphNode) || !isVisible({ id: edge.target } as GraphNode)) continue
     const list = ranks.get(edge.target) ?? []
     list.push(rank.get(edge.source) ?? 0)
     ranks.set(edge.target, list)
@@ -46,7 +51,7 @@ export function orderColumns(graph: Graph): { useCases: GraphNode[]; classes: Gr
     return list && list.length > 0 ? list.reduce((a, b) => a + b, 0) / list.length : Infinity
   }
   const classes = graph.nodes
-    .filter((n) => n.kind === 'class')
+    .filter((n) => n.kind === 'class' && isVisible(n))
     .sort((a, b) => mean(a.id) - mean(b.id) || byName(a, b))
 
   return { useCases, classes }

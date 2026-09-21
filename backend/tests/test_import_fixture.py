@@ -122,3 +122,25 @@ def test_methodenreferenz_traegt_baseline_und_klasse(fixture_root):
     for methode in buch.methods:
         assert methode.ref.baseline_id == report.baseline.id
         assert methode.ref.class_id == ClassId("Buch.java")
+
+
+def test_import_grosses_ecommerce_demo_projekt(ecommerce_fixture_root):
+    """Prueft das 60-Use-Case-Demo-Projekt (fixtures/ecommerce-platform)."""
+    report = import_project(ecommerce_fixture_root, label="ecommerce-platform")
+    counts = report.baseline.counts()
+
+    assert counts["use_cases"] == 60
+    assert counts["classes"] == 77
+    assert counts["parsed_classes"] == 77
+    assert counts["trace_links"] == 151
+    assert counts["methods"] >= 250
+
+    assert not report.diagnostics.has_errors
+    assert report.read_link_lines == 153
+    assert report.duplicate_link_lines == 2
+
+    # Pruefen, dass alle 60 Use Cases geladen wurden
+    for i in range(1, 61):
+        uc_id = UseCaseId(f"UC{i}")
+        assert uc_id in report.baseline.use_cases
+        assert report.baseline.use_case(uc_id).title != ""

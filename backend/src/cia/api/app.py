@@ -87,14 +87,14 @@ DEV_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
 def create_app(
     registry: Registry | None = None,
-    autoload: Path | None = None,
+    autoload: Path | list[Path] | None = None,
     provider: LlmProvider | None = None,
     protocol_dir: Path | None = None,
     cors_origins: list[str] | None = None,
 ) -> FastAPI:
     """Baut die Anwendung.
 
-    ``autoload`` importiert beim Start einen Projektstand, damit die Oberflaeche
+    ``autoload`` importiert beim Start einen oder mehrere Projektstaende, damit die Oberflaeche
     ohne Eingabe eines Pfades etwas zeigen kann. ``provider`` ist das
     Sprachmodell; ohne Angabe antwortet der Mock, der nichts bewertet.
     ``protocol_dir`` ist das Verzeichnis, in das das Protokoll geschrieben wird;
@@ -114,7 +114,10 @@ def create_app(
     app.include_router(router)
 
     if autoload is not None:
-        app.state.registry.add_report(import_project(autoload))
+        paths = [autoload] if isinstance(autoload, Path) else autoload
+        for p in paths:
+            if p.is_dir():
+                app.state.registry.add_report(import_project(p))
     return app
 
 
