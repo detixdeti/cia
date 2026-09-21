@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.idea/
+node_modules/
+dist/
+.env
+.DS_Store
+*DE.md
+
+# Protokolle der Analysen (koennen Studiendaten enthalten)
+protocol/

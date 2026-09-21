@@ -1,0 +1,46 @@
+# Lokale Entwicklungsumgebung: `docker compose up`
+#
+# Backend:  http://localhost:8000  (interaktive Dokumentation unter /docs)
+# Frontend: http://localhost:5173
+#
+# Quelltexte, Tests und Fixtures liegen als Bind-Mounts im Container. Aenderungen
+# am Code wirken ohne neuen Build. Der Projektstand im Arbeitsspeicher geht beim
+# Neustart des Backends verloren (siehe backend/src/cia/api/registry.py).
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      # Beim Start importierter Projektstand. Der Import liest nur diesen Pfad
+      # im Container, nicht beliebige Verzeichnisse des Rechners.
+      CIA_AUTOLOAD_PROJECT: /fixtures/sample-project
+      # Das Protokoll (eine .jsonl-Datei je Szenario) landet in ./protocol auf
+      # dem Rechner und uebersteht damit einen Neustart des Containers.
+      CIA_PROTOCOL_DIR: /protocol
+      # "demo": gekennzeichnete Beispielantworten, damit sich die Oberflaeche
+      # ohne echtes Modell vorfuehren laesst. Fuer Messungen entfernen.
+      CIA_LLM: demo
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/tests:/app/tests
+      - ./backend/pyproject.toml:/app/pyproject.toml
+      # /fixtures ist der Pfad, den tests/conftest.py erwartet.
+      - ./fixtures:/fixtures:ro
+      - ./protocol:/protocol
+    command: >
+      uvicorn cia.api.main:app --host 0.0.0.0 --port 8000
+      --reload --reload-dir /app/src
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      # node_modules bleibt im Container; die Binaerdateien des Rechners
+      # (macOS) waeren unter Linux unbrauchbar.
+      - /app/node_modules
+    depends_on:
+      - backend

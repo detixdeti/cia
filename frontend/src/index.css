@@ -1,0 +1,294 @@
+/* Design-System der Oberflaeche.
+ *
+ * Tailwind CSS liefert die Bausteine. Was sich oft wiederholt (Buttons, Karten,
+ * Badges, Hinweise), steht hier einmal als benannte Klasse, damit das Markup
+ * lesbar bleibt.
+ *
+ * Hell und dunkel: Im Dunkelmodus (Klasse "dark" am <html>-Element) werden die
+ * Farbskalen zentral gespiegelt. Aus einem hellen Grund wird ein dunkler, aus
+ * dunklem Text heller Text. Alle Farbklassen im Markup kippen damit von selbst
+ * mit; einzeln umgefaerbt wird nichts.
+ *
+ * Farben tragen nie allein eine Aussage: Jeder Zustand steht auch als Text da
+ * (Konzept 4.8). Es gibt bewusst kein Gruen fuer "in Ordnung", denn nichts
+ * gefunden zu haben ist keine Entwarnung (Konzept 4.12).
+ */
+
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Flaeche von Karten und Feldern. Im Dunkelmodus wird sie dunkel. */
+  --color-surface: #ffffff;
+}
+
+:root {
+  /* Weiche Farbverlaeufe im Hintergrund */
+  --ambient:
+    radial-gradient(52rem 34rem at 6% -10%, rgb(99 102 241 / 0.16), transparent 62%),
+    radial-gradient(46rem 30rem at 100% -4%, rgb(14 165 233 / 0.14), transparent 62%);
+  /* Punktraster im Graphen */
+  --dot: #d3dbe6;
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 14px 36px -18px rgb(15 23 42 / 0.2);
+}
+
+/* --- Dunkelmodus ---------------------------------------------------------- */
+
+.dark {
+  color-scheme: dark;
+
+  --color-surface: #101a30;
+  --ambient:
+    radial-gradient(52rem 34rem at 6% -10%, rgb(99 102 241 / 0.24), transparent 62%),
+    radial-gradient(46rem 30rem at 100% -4%, rgb(14 165 233 / 0.14), transparent 62%);
+  --dot: #22304e;
+  --shadow-card: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 18px 44px -22px rgb(0 0 0 / 0.75);
+
+  /* Grau: von hell nach dunkel gespiegelt und von Hand auf gute Lesbarkeit
+     abgestimmt. 50 ist der dunkelste Grund, 950 der hellste Text. */
+  --color-slate-50: #0a1122;
+  --color-slate-100: #0c1427;
+  --color-slate-200: #1b2742;
+  --color-slate-300: #2b3b5c;
+  --color-slate-400: #6f7f9a;
+  --color-slate-500: #8c9bb4;
+  --color-slate-600: #aab6ca;
+  --color-slate-700: #c6cfdd;
+  --color-slate-800: #dde3ec;
+  --color-slate-900: #eef2f7;
+  --color-slate-950: #f8fafc;
+
+  /* Farbtoene: 50 bis 300 werden dunkel, 700 bis 950 hell. 400 bis 600 bleiben. */
+  --color-indigo-50: #1e1b4b;
+  --color-indigo-100: #312e81;
+  --color-indigo-200: #3730a3;
+  --color-indigo-300: #4338ca;
+  --color-indigo-700: #a5b4fc;
+  --color-indigo-800: #c7d2fe;
+  --color-indigo-900: #e0e7ff;
+
+  --color-sky-50: #082f49;
+  --color-sky-100: #0c4a6e;
+  --color-sky-200: #075985;
+  --color-sky-300: #0369a1;
+  --color-sky-700: #7dd3fc;
+  --color-sky-800: #bae6fd;
+  --color-sky-900: #e0f2fe;
+
+  --color-amber-50: #33210a;
+  --color-amber-100: #451a03;
+  --color-amber-200: #78350f;
+  --color-amber-300: #92400e;
+  --color-amber-700: #fcd34d;
+  --color-amber-800: #fde68a;
+  --color-amber-900: #fef3c7;
+
+  --color-red-50: #3a1212;
+  --color-red-100: #450a0a;
+  --color-red-200: #7f1d1d;
+  --color-red-300: #991b1b;
+  --color-red-700: #fca5a5;
+  --color-red-800: #fecaca;
+  --color-red-900: #fee2e2;
+
+  --color-rose-50: #3b0f1f;
+  --color-rose-100: #4c0519;
+  --color-rose-200: #881337;
+  --color-rose-700: #fda4af;
+  --color-rose-900: #ffe4e6;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-100 text-slate-800 antialiased;
+    background-image: var(--ambient);
+    background-attachment: fixed;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--color-slate-400) 55%, transparent) transparent;
+  }
+
+  code {
+    @apply font-mono text-[0.85em];
+  }
+
+  ::selection {
+    @apply bg-indigo-200/60;
+  }
+}
+
+@layer components {
+  /* --- Buttons ------------------------------------------------------------ */
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-surface px-3.5 py-2 text-sm font-medium text-slate-700 transition duration-150;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+    @apply hover:-translate-y-px hover:border-slate-300 hover:bg-slate-50 active:translate-y-0;
+    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-400;
+    @apply disabled:pointer-events-none disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply border-transparent text-white;
+    /* Feste Farben: Der Hauptknopf sieht in hell und dunkel gleich aus. */
+    background-image: linear-gradient(180deg, #7376f5 0%, #5558ea 100%);
+    box-shadow:
+      0 1px 2px rgb(49 46 129 / 0.35),
+      0 8px 18px -8px rgb(79 70 229 / 0.7),
+      inset 0 1px 0 rgb(255 255 255 / 0.22);
+    @apply hover:border-transparent hover:bg-transparent hover:brightness-110;
+  }
+  .btn-quiet {
+    @apply border-transparent bg-transparent text-slate-600 hover:border-transparent hover:bg-slate-200/60;
+    box-shadow: none;
+  }
+  .btn-sm {
+    @apply gap-1.5 rounded-lg px-2.5 py-1.5 text-xs;
+  }
+
+  /* --- Formularfelder ----------------------------------------------------- */
+
+  .input {
+    @apply block w-full rounded-xl border border-slate-200 bg-surface px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+    @apply transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-400/20 focus:outline-none;
+    @apply read-only:bg-slate-50 read-only:text-slate-600;
+  }
+  .field-label {
+    @apply mb-1.5 block text-sm font-medium text-slate-700;
+  }
+  .field-hint {
+    @apply mt-1 block text-xs text-slate-500;
+  }
+  .check {
+    @apply flex items-center gap-2 text-sm text-slate-700;
+  }
+  .check input {
+    @apply size-4 rounded accent-indigo-500;
+  }
+
+  /* --- Flaechen ------------------------------------------------------------ */
+
+  .card {
+    @apply rounded-2xl border border-slate-200/80 bg-surface/85 backdrop-blur-sm;
+    box-shadow: var(--shadow-card);
+  }
+  /* Schwebende Glasflaeche (Kopfzeile, Chips ueber dem Graphen) */
+  .glass {
+    @apply border border-slate-200/70 bg-surface/70 backdrop-blur-xl;
+  }
+  .eyebrow {
+    @apply text-[0.68rem] font-semibold tracking-[0.12em] text-slate-500 uppercase;
+  }
+
+  /* --- Badges -------------------------------------------------------------- */
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset;
+  }
+  .badge-neutral {
+    @apply bg-slate-100 text-slate-700 ring-slate-200;
+  }
+  .badge-muted {
+    @apply bg-slate-50 text-slate-500 ring-slate-200;
+  }
+  .badge-info {
+    @apply bg-sky-50 text-sky-800 ring-sky-200;
+  }
+  .badge-accent {
+    @apply bg-indigo-50 text-indigo-700 ring-indigo-200;
+  }
+  .badge-warn {
+    @apply bg-amber-50 text-amber-800 ring-amber-200;
+  }
+  .badge-error {
+    @apply bg-red-50 text-red-700 ring-red-200;
+  }
+
+  /* --- Hinweise ------------------------------------------------------------ */
+
+  .notice {
+    @apply flex gap-2.5 rounded-xl border px-3.5 py-2.5 text-sm;
+  }
+  .notice-neutral {
+    @apply border-slate-200 bg-slate-50 text-slate-700;
+  }
+  .notice-info {
+    @apply border-sky-200 bg-sky-50 text-sky-900;
+  }
+  .notice-warn {
+    @apply border-amber-200 bg-amber-50 text-amber-900;
+  }
+  .notice-error {
+    @apply border-red-200 bg-red-50 text-red-800;
+  }
+
+  /* --- Text- und Codebloecke ----------------------------------------------- */
+
+  .code-block {
+    @apply max-h-72 overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-3 font-mono text-xs leading-relaxed break-words whitespace-pre-wrap text-slate-800;
+  }
+  .text-block {
+    @apply rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm leading-relaxed break-words whitespace-pre-wrap text-slate-800;
+  }
+
+  /* Aufklappbereiche (<details>) */
+  .disclosure {
+    @apply rounded-xl border border-slate-200 bg-surface;
+  }
+  .disclosure > summary {
+    @apply cursor-pointer rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-700 transition select-none hover:bg-slate-50;
+  }
+  .disclosure[open] > summary {
+    @apply rounded-b-none border-b border-slate-200;
+  }
+  .disclosure > :not(summary) {
+    @apply mx-3.5 my-2.5;
+  }
+
+  /* --- Ist-Soll-Vergleich --------------------------------------------------- */
+
+  .diff-line {
+    @apply px-2 font-mono text-xs leading-5 break-words whitespace-pre-wrap;
+  }
+  .diff-mark {
+    @apply inline-block w-4 font-bold text-slate-500 select-none;
+  }
+  .diff-removed {
+    @apply bg-rose-50 text-rose-900;
+  }
+  .diff-added {
+    @apply bg-sky-50 text-sky-900;
+  }
+}
+
+/* --- Bewegung ---------------------------------------------------------------- */
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Sanftes Einblenden beim Wechsel einer Ansicht */
+.reveal {
+  animation: reveal 0.32s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    animation: none;
+  }
+  .btn {
+    transition: none;
+  }
+}

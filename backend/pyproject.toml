@@ -1,0 +1,31 @@
+[project]
+name = "cia-prototype"
+version = "0.1.0"
+description = "Interaktive graphbasierte Change Impact Analysis von Softwareanforderungen"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "tree-sitter",
+    "tree-sitter-java",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "hypothesis", "httpx"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 95
+target-version = "py311"

@@ -1,0 +1,26 @@
+# Trace-Links des Beispielsystems.
+# Format nach Konzept 4.2: eine Zuordnung je Zeile, UC-Kennung -> Dateiname.
+# Mehrere Zuordnungen zu einem Use Case entstehen durch Wiederholung.
+
+UC1 -> AusleihService.java
+UC1 -> Ausleihe.java
+UC1 -> Buch.java
+UC1 -> Mitglied.java
+
+UC2 -> AusleihService.java
+UC2 -> Ausleihe.java
+UC2 -> Buch.java
+
+UC3 -> Mitglied.java
+
+UC4 -> MahnungService.java
+UC4 -> GebuehrenRechner.java
+UC4 -> Ausleihe.java
+UC4 -> Mitglied.java
+
+UC5 -> Katalog.java
+UC5 -> Buch.java
+
+# Absichtlich doppelt deklariert. Konzept 4.2: doppelte identische Zuordnungen
+# werden zusammengefasst, ohne daraus zusaetzliche Evidenz abzuleiten.
+UC1 -> Buch.java
