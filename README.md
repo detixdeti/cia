@@ -39,7 +39,8 @@ Start importiert. Tests im Container:
 
 ## Oberflaeche
 
-Unter <http://localhost:5173>: Graph der Use Cases und Klassen, Auswahl als
+Unter <http://localhost:5173>: Zuordnungen als Graph oder als Matrix (zwei
+Darstellungen derselben Relation, mit gemeinsamer Auswahl), Auswahl als
 Teilgraph, Szenarien anlegen, Modellanalyse, Ist-Soll-Vergleich mit
 Entscheidung, Abdeckung und Abschluss. Einen neuen Ausgangsstand laedt man ueber
 "Neuer Ausgangsstand" hoch (Use Cases, Java-Dateien oder -Ordner, Link-Datei);

@@ -2,25 +2,67 @@
 // Reiter (Auswahl, Szenario, Analyse).
 
 import { useMemo, useState } from 'react'
-import { Activity, ClipboardList, FileCode, FileText, Layers, Link2, MousePointerClick, type LucideIcon } from 'lucide-react'
+import {
+  Activity,
+  ClipboardList,
+  FileCode,
+  FileText,
+  Grid3x3,
+  Layers,
+  Link2,
+  MousePointerClick,
+  Network,
+  type LucideIcon,
+} from 'lucide-react'
 import { api } from '../api'
 import { isUseCaseNode, refOf } from '../format'
+import type { Highlight } from '../graphLayout'
 import { useLoad } from '../useLoad'
 import type { Graph, Scenario, Selection } from '../types'
 import { AnalysisPanel } from './AnalysisPanel'
 import { DetailPanel } from './DetailPanel'
-import { GraphView, type Highlight } from './GraphView'
+import { GraphView } from './GraphView'
+import { Matrix } from './Matrix'
 import { ImportReport } from './ImportReport'
 import { ScenarioPanel } from './ScenarioPanel'
 import { Badge, ErrorBox, Loading } from './ui'
 
 type Tab = 'auswahl' | 'szenario' | 'analyse'
+type View = 'graph' | 'matrix'
 
 const TABS: { id: Tab; label: string; icon: LucideIcon }[] = [
   { id: 'auswahl', label: 'Auswahl', icon: MousePointerClick },
   { id: 'szenario', label: 'Szenario', icon: Layers },
   { id: 'analyse', label: 'Analyse', icon: Activity },
 ]
+
+/** Umschalter zwischen den beiden Darstellungen derselben Relation. */
+function ViewSwitch({ view, onChange }: { view: View; onChange: (view: View) => void }) {
+  const options: { id: View; label: string; icon: LucideIcon }[] = [
+    { id: 'graph', label: 'Graph', icon: Network },
+    { id: 'matrix', label: 'Matrix', icon: Grid3x3 },
+  ]
+  return (
+    <div role="group" aria-label="Darstellung" className="inline-flex gap-1 rounded-xl bg-slate-100 p-1">
+      {options.map(({ id, label, icon: Icon }) => (
+        <button
+          key={id}
+          data-testid={`view-${id}`}
+          aria-pressed={view === id}
+          onClick={() => onChange(id)}
+          className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+            view === id
+              ? 'bg-surface text-indigo-700 shadow-sm ring-1 ring-slate-200/80'
+              : 'text-slate-500 hover:text-slate-900'
+          }`}
+        >
+          <Icon className="size-4" aria-hidden />
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 /** Eine Kennzahl als kleines Etikett. */
 function Stat({ icon: Icon, value, label }: { icon: LucideIcon; value: number; label: string }) {
@@ -42,6 +84,7 @@ export function Workspace({ baselineId }: { baselineId: string }) {
   const [tab, setTab] = useState<Tab>('auswahl')
   const [currentId, setCurrentId] = useState<string | null>(null)
   const [showReport, setShowReport] = useState(false)
+  const [view, setView] = useState<View>('graph')
 
   // Teilgraph der Auswahl (F2): die direkten Nachbarn, nicht weiter.
   const subgraph = useLoad<Graph | null>(
@@ -121,14 +164,36 @@ export function Workspace({ baselineId }: { baselineId: string }) {
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(420px,560px)]">
         <div className="card self-start overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/70 px-4 py-3">
+            <div>
+              <h2 className="text-sm font-semibold tracking-tight text-slate-900">Zuordnungen</h2>
+              <p className="text-xs text-slate-500">
+                {view === 'graph'
+                  ? 'Klick wählt aus, Umschalt+Klick mehrere. Die Anordnung hat keine Bedeutung.'
+                  : 'Zeilen sind Use Cases, Spalten Klassen. Ein Punkt ist ein deklarierter Link.'}
+              </p>
+            </div>
+            <ViewSwitch view={view} onChange={setView} />
+          </div>
           <ErrorBox problems={graph.error} />
           {graph.data ? (
-            <GraphView
-              graph={graph.data}
-              highlights={highlights}
-              visibleIds={visibleIds}
-              onSelectionChange={setSelectedIds}
-            />
+            view === 'graph' ? (
+              <GraphView
+                graph={graph.data}
+                highlights={highlights}
+                visibleIds={visibleIds}
+                initialSelection={selectedIds}
+                onSelectionChange={setSelectedIds}
+              />
+            ) : (
+              <Matrix
+                graph={graph.data}
+                selectedIds={selectedIds}
+                highlights={highlights}
+                visibleIds={visibleIds}
+                onSelectionChange={setSelectedIds}
+              />
+            )
           ) : (
             !graph.error && (
               <div className="p-6">

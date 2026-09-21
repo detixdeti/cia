@@ -13,7 +13,10 @@ externen Anfragen). Die Oberflaeche ruft das Backend unter `VITE_API_URL` auf
 Aufbau: `src/api.ts` (Zugriff auf das Backend), `src/types.ts` (Formen der
 Antworten), `src/labels.ts` (alle Beschriftungen), `src/index.css` (Design-System:
 Buttons, Karten, Badges, Hinweise) und `src/components/` (Import, Graph,
-Szenarien, Analyse, Ist-Soll-Vergleich, Entscheidungen, Abdeckung).
+Szenarien, Analyse, Ist-Soll-Vergleich, Entscheidungen, Abdeckung). Graph
+(`GraphView.tsx`) und Matrix (`Matrix.tsx`) zeigen dieselbe Relation und teilen
+sich Auswahl, Markierungen und Teilgraph-Filter; Reihenfolge und Zustandstexte
+stehen gemeinsam in `src/graphLayout.ts`.
 
 Erscheinungsbild: hell und dunkel, umschaltbar oben rechts und standardmaessig
 nach dem System. Im Dunkelmodus werden die Farbskalen zentral in `src/index.css`

@@ -11,17 +11,9 @@
 import { useEffect, useRef } from 'react'
 import cytoscape from 'cytoscape'
 import { Maximize2 } from 'lucide-react'
+import { nodeStates, orderColumns, type Highlight } from '../graphLayout'
 import { currentTheme, useTheme } from '../theme'
 import type { Graph, GraphNode } from '../types'
-
-/** Markierung eines Knotens durch Auswahl oder Szenario. */
-export type Highlight = 'changed' | 'candidate' | 'neighbor'
-
-const HIGHLIGHT_TEXT: Record<Highlight, string> = {
-  changed: 'geändert',
-  candidate: 'Kandidat',
-  neighbor: 'verknüpft',
-}
 
 interface Props {
   graph: Graph
@@ -29,15 +21,14 @@ interface Props {
   highlights: Record<string, Highlight>
   /** Nur diese Knoten zeigen. ``null`` zeigt alle. */
   visibleIds: Set<string> | null
+  /** Die Auswahl beim Aufbau. Damit bleibt sie beim Wechsel von der Matrix erhalten. */
+  initialSelection: string[]
   onSelectionChange: (ids: string[]) => void
 }
 
 /** Der Text im Knoten: Name und, falls zutreffend, Zustaende. */
 function displayLabel(node: GraphNode, highlight: Highlight | undefined): string {
-  const states: string[] = []
-  if (!node.linked) states.push('nicht zugeordnet')
-  if (node.parsed === false) states.push('nicht verarbeitet')
-  if (highlight) states.push(HIGHLIGHT_TEXT[highlight])
+  const states = nodeStates(node, highlight)
   const name = node.kind === 'class' ? node.ref : node.label
   return states.length > 0 ? `${name}\n${states.join(' · ')}` : name
 }
@@ -45,31 +36,9 @@ function displayLabel(node: GraphNode, highlight: Highlight | undefined): string
 const ROW_GAP = 60
 const CLASS_COLUMN_X = 470
 
-/** Natuerliche Sortierung: UC2 vor UC10. */
-function byName(a: GraphNode, b: GraphNode): number {
-  return a.ref.localeCompare(b.ref, undefined, { numeric: true })
-}
-
-/** Feste Positionen: Use Cases nach Kennung, Klassen nach dem Mittelwert ihrer
- *  Use Cases. Das spart Kreuzungen und bleibt trotzdem reproduzierbar. */
+/** Feste Positionen: zwei Spalten in der gemeinsamen Reihenfolge. */
 function place(graph: Graph): Record<string, { x: number; y: number }> {
-  const useCases = graph.nodes.filter((n) => n.kind === 'use_case').sort(byName)
-  const rank = new Map(useCases.map((n, i) => [n.id, i]))
-
-  const ranks = new Map<string, number[]>()
-  for (const edge of graph.edges) {
-    const list = ranks.get(edge.target) ?? []
-    list.push(rank.get(edge.source) ?? 0)
-    ranks.set(edge.target, list)
-  }
-  const mean = (id: string): number => {
-    const list = ranks.get(id)
-    return list && list.length > 0 ? list.reduce((a, b) => a + b, 0) / list.length : Infinity
-  }
-  const classes = graph.nodes
-    .filter((n) => n.kind === 'class')
-    .sort((a, b) => mean(a.id) - mean(b.id) || byName(a, b))
-
+  const { useCases, classes } = orderColumns(graph)
   const positions: Record<string, { x: number; y: number }> = {}
   const height = Math.max(useCases.length, classes.length)
   useCases.forEach((n, i) => {
@@ -252,10 +221,11 @@ function legendFor(p: Palette): { label: string; accent?: string; border: string
 
 const FIT_PADDING = 70
 
-export function GraphView({ graph, highlights, visibleIds, onSelectionChange }: Props) {
+export function GraphView({ graph, highlights, visibleIds, initialSelection, onSelectionChange }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const cyRef = useRef<cytoscape.Core | null>(null)
   const selectionHandler = useRef(onSelectionChange)
+  const initialSelectionRef = useRef(initialSelection)
   const theme = useTheme()
   const palette = PALETTE[theme]
 
@@ -318,6 +288,10 @@ export function GraphView({ graph, highlights, visibleIds, onSelectionChange }: 
 
     applyCurves(cy)
     cy.fit(undefined, FIT_PADDING)
+
+    // Die Auswahl der anderen Ansicht uebernehmen, bevor auf Aenderungen gehoert wird.
+    for (const id of initialSelectionRef.current) cy.getElementById(id).select()
+    cy.nodes(':selected').connectedEdges().addClass('sel')
 
     // Auswahl: Kanten der ausgewaehlten Knoten leicht hervorheben.
     cy.on('select unselect', () => {
@@ -398,14 +372,10 @@ export function GraphView({ graph, highlights, visibleIds, onSelectionChange }: 
       <div
         ref={containerRef}
         data-testid="graph"
-        className="h-[62vh] min-h-[480px] bg-[radial-gradient(var(--dot)_1px,transparent_1px)] [background-size:20px_20px] lg:h-[calc(100vh-11.5rem)]"
+        className="h-[62vh] min-h-[480px] bg-[radial-gradient(var(--dot)_1px,transparent_1px)] [background-size:20px_20px] lg:h-[calc(100vh-15.5rem)]"
       />
 
       {/* Schwebende Bedienelemente ueber dem Graphen */}
-      <div className="glass pointer-events-none absolute top-4 left-4 rounded-xl px-3.5 py-2.5 shadow-sm">
-        <h2 className="text-sm font-semibold tracking-tight text-slate-900">Graph der Zuordnungen</h2>
-        <p className="text-xs text-slate-500">Klick wählt aus, Umschalt+Klick mehrere. Die Anordnung hat keine Bedeutung.</p>
-      </div>
       <button
         className="btn btn-sm absolute top-4 right-4"
         onClick={() => cyRef.current?.fit(cyRef.current.nodes().not('.hidden'), FIT_PADDING)}
