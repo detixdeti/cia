@@ -16,10 +16,10 @@ import {
 } from '@mui/material';
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
-import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
+// DEMO-BETREUER: import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
+// DEMO-BETREUER: import RestartAltIcon from '@mui/icons-material/RestartAlt';
+// DEMO-BETREUER: import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
 import type { ProjectSummary } from './types';
 import type { ThemeMode } from './theme';
 import Logo from './components/Logo';
@@ -55,7 +55,8 @@ export default function TopBar({
   return (
     <AppBar position="static" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
       <Toolbar sx={{ gap: 2, py: 1 }}>
-        <ButtonBase onClick={() => onPageChange('overview')} sx={{ gap: 1.25, borderRadius: 1.5, pr: 1 }}>
+        {/* DEMO-BETREUER: vorher onPageChange('overview') */}
+        <ButtonBase onClick={() => onPageChange('mapping')} sx={{ gap: 1.25, borderRadius: 1.5, pr: 1 }}>
           <Logo size={34} />
           <Box sx={{ textAlign: 'left' }}>
             <Typography sx={{ fontWeight: 800, lineHeight: 1.15, fontSize: 15 }}>Change Impact Analysis</Typography>
@@ -66,27 +67,32 @@ export default function TopBar({
         </ButtonBase>
 
         <Tabs value={page} onChange={(_event, value: Page) => onPageChange(value)} sx={{ flex: 1, ml: 2 }}>
+          {/* DEMO-BETREUER: Übersicht ausgeblendet
           <Tab
             value="overview"
             label="Übersicht"
             icon={<DashboardOutlinedIcon fontSize="small" />}
             iconPosition="start"
           />
+          */}
           <Tab
             value="mapping"
             label="Zuordnungen"
             icon={<AccountTreeOutlinedIcon fontSize="small" />}
             iconPosition="start"
           />
+          {/* DEMO-BETREUER: Szenarien ausgeblendet
           <Tab
             value="scenarios"
             label="Szenarien"
             icon={<ScienceOutlinedIcon fontSize="small" />}
             iconPosition="start"
           />
+          */}
         </Tabs>
 
         <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+          {/* DEMO-BETREUER: Arbeitsstand ausgeblendet
           {projectModified && (
             <Tooltip title="Übernommene Szenarien sind im Arbeitsstand enthalten, die Originaldateien bleiben unverändert. Klicken zum Zurücksetzen.">
               <Chip
@@ -98,6 +104,7 @@ export default function TopBar({
               />
             </Tooltip>
           )}
+          */}
 
           <TextField
             select

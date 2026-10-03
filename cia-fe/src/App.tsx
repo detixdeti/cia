@@ -4,10 +4,10 @@ import { fetchProject, fetchProjects, resetProject } from './api';
 import { createAppTheme, type ThemeMode } from './theme';
 import type { Project, ProjectSummary, ScenarioDetail } from './types';
 import TopBar, { type Page } from './TopBar';
-import OverviewPage from './overview/OverviewPage';
+// DEMO-BETREUER: import OverviewPage from './overview/OverviewPage';
 import MappingView from './mapping/MappingView';
 import { buildScenarioOverlay, type ScenarioOverlay } from './mapping/mappingModel';
-import ScenariosPage from './scenarios/ScenariosPage';
+// DEMO-BETREUER: import ScenariosPage from './scenarios/ScenariosPage';
 import ImportWarnings from './ImportWarnings';
 import { NotificationProvider, useNotify } from './components/Notifications';
 
@@ -42,7 +42,8 @@ function AppContent({ themeMode, onToggleTheme }: { themeMode: ThemeMode; onTogg
   const [project, setProject] = useState<Project | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const [page, setPage] = useState<Page>('overview');
+  // DEMO-BETREUER: vorher useState<Page>('overview')
+  const [page, setPage] = useState<Page>('mapping');
   const [selectedScenarioId, setSelectedScenarioId] = useState<number | null>(null);
   // A scenario marked in the mapping view ("Im Graph anzeigen")
   const [overlay, setOverlay] = useState<ScenarioOverlay | null>(null);
@@ -50,7 +51,8 @@ function AppContent({ themeMode, onToggleTheme }: { themeMode: ThemeMode; onTogg
   useEffect(() => {
     fetchProjects()
       .then((list) => {
-        setProjects(list);
+        // DEMO-BETREUER: nur das sample-project zur Auswahl, vorher setProjects(list)
+        setProjects(list.filter((p) => p.id === 'sample-project'));
         // The app always starts with the sample project if it exists.
         const start = list.find((p) => p.id === 'sample-project') ?? list[0];
         if (start) setSelectedProjectId(start.id);
@@ -93,10 +95,12 @@ function AppContent({ themeMode, onToggleTheme }: { themeMode: ThemeMode; onTogg
     setPage('scenarios');
   };
 
+  /* DEMO-BETREUER: nur für die Szenarien-Seite gebraucht
   const showScenarioInGraph = (scenario: ScenarioDetail) => {
     setOverlay(buildScenarioOverlay(scenario));
     setPage('mapping');
   };
+  */
 
   return (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -123,9 +127,11 @@ function AppContent({ themeMode, onToggleTheme }: { themeMode: ThemeMode; onTogg
 
         {project && (
           <>
+            {/* DEMO-BETREUER: Übersicht ausgeblendet
             {page === 'overview' && (
               <OverviewPage key={project.id} project={project} onOpenPage={setPage} onOpenScenario={showScenario} />
             )}
+            */}
 
             {page === 'mapping' && <ImportWarnings warnings={project.warnings} />}
 
@@ -141,6 +147,7 @@ function AppContent({ themeMode, onToggleTheme }: { themeMode: ThemeMode; onTogg
               />
             </Box>
 
+            {/* DEMO-BETREUER: Szenarien ausgeblendet
             {page === 'scenarios' && (
               <Box sx={{ flex: 1, minHeight: 0 }}>
                 <ScenariosPage
@@ -153,6 +160,7 @@ function AppContent({ themeMode, onToggleTheme }: { themeMode: ThemeMode; onTogg
                 />
               </Box>
             )}
+            */}
           </>
         )}
       </Box>

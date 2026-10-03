@@ -20,6 +20,7 @@ import type { JavaClassDetail, Project } from '../types';
 import { useCaseKey, useCaseLabel } from '../mapping/mappingModel';
 import { LinkedList, SectionTitle } from './DetailParts';
 import SourceCode from './SourceCode';
+import TodoHint from '../components/TodoHint';
 import CreateScenarioDialog from '../scenarios/CreateScenarioDialog';
 
 interface ClassDetailProps {
@@ -30,6 +31,9 @@ interface ClassDetailProps {
 }
 
 type TabName = 'overview' | 'source';
+
+// DEMO-BETREUER: Übersicht (Use Cases, Felder, Methoden) ausgeblendet, nur Quelltext und TODOs. Zurück: true
+const DEMO_SHOW_CLASS_OVERVIEW = false;
 
 export default function ClassDetail({ project, classId, onNavigate, onScenarioCreated }: ClassDetailProps) {
   const [detail, setDetail] = useState<JavaClassDetail | null>(null);
@@ -65,10 +69,20 @@ export default function ClassDetail({ project, classId, onNavigate, onScenarioCr
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Tabs value={tab} onChange={(_event, value: TabName) => setTab(value)} sx={{ px: 2, minHeight: 40 }}>
-        <Tab value="overview" label="Übersicht" sx={{ minHeight: 40 }} />
-        <Tab value="source" label="Quelltext" sx={{ minHeight: 40 }} />
-      </Tabs>
+      {DEMO_SHOW_CLASS_OVERVIEW && (
+        <Tabs value={tab} onChange={(_event, value: TabName) => setTab(value)} sx={{ px: 2, minHeight: 40 }}>
+          <Tab value="overview" label="Übersicht" sx={{ minHeight: 40 }} />
+          <Tab value="source" label="Quelltext" sx={{ minHeight: 40 }} />
+        </Tabs>
+      )}
+
+      {/* DEMO-BETREUER */}
+      {!DEMO_SHOW_CLASS_OVERVIEW && (
+        <Box sx={{ px: 2 }}>
+          <TodoHint>Methoden und Felder der Klasse für die Analyse aufbereiten</TodoHint>
+          <TodoHint>Codeänderung erfassen und gegen die verknüpften Use Cases prüfen</TodoHint>
+        </Box>
+      )}
 
       {error && (
         <Alert severity="error" sx={{ m: 2 }}>
@@ -77,12 +91,13 @@ export default function ClassDetail({ project, classId, onNavigate, onScenarioCr
       )}
       {!detail && !error && <CircularProgress size={28} sx={{ m: 3, alignSelf: 'center' }} />}
 
-      {detail && tab === 'overview' && (
+      {DEMO_SHOW_CLASS_OVERVIEW && detail && tab === 'overview' && (
         <Box sx={{ flex: 1, overflow: 'auto', px: 2, pb: 2 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, fontFamily: 'monospace' }}>
             {detail.path}
           </Typography>
 
+          {/* DEMO-BETREUER: Codeänderung ausgeblendet
           <Button
             variant="outlined"
             startIcon={<EditOutlinedIcon />}
@@ -91,6 +106,8 @@ export default function ClassDetail({ project, classId, onNavigate, onScenarioCr
           >
             Code ändern …
           </Button>
+          */}
+          <TodoHint>Codeänderung erfassen und gegen die verknüpften Use Cases prüfen</TodoHint>
 
           <SectionTitle>Zugeordnete Use Cases ({linkedUseCases.length})</SectionTitle>
           <LinkedList
@@ -122,13 +139,14 @@ export default function ClassDetail({ project, classId, onNavigate, onScenarioCr
               <ListItem
                 key={method.signature}
                 disablePadding
-                secondaryAction={
-                  <Tooltip title="Diese Methode ändern (Codeänderung prüfen)">
-                    <IconButton edge="end" onClick={() => setChangeMethod(method.signature)}>
-                      <EditOutlinedIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                }
+                // DEMO-BETREUER: Stift-Symbol zum Ändern der Methode ausgeblendet
+                // secondaryAction={
+                //   <Tooltip title="Diese Methode ändern (Codeänderung prüfen)">
+                //     <IconButton edge="end" onClick={() => setChangeMethod(method.signature)}>
+                //       <EditOutlinedIcon fontSize="small" />
+                //     </IconButton>
+                //   </Tooltip>
+                // }
               >
                 <ListItemButton
                   onClick={() => showLinesInSource(method.startLine, method.endLine)}
@@ -146,7 +164,7 @@ export default function ClassDetail({ project, classId, onNavigate, onScenarioCr
         </Box>
       )}
 
-      {detail && tab === 'source' && (
+      {detail && (tab === 'source' || !DEMO_SHOW_CLASS_OVERVIEW) && (
         <Box sx={{ flex: 1, minHeight: 0 }}>
           <SourceCode source={detail.source} highlightFrom={highlight?.from} highlightTo={highlight?.to} />
         </Box>

@@ -8,6 +8,7 @@ import { artifactColors } from '../theme';
 import { classKey, parseKey } from '../mapping/mappingModel';
 import CreateScenarioDialog from '../scenarios/CreateScenarioDialog';
 import ClassDetail from './ClassDetail';
+import TodoHint from '../components/TodoHint';
 import { LinkedList, SectionTitle } from './DetailParts';
 
 interface DetailPanelProps {
@@ -88,6 +89,7 @@ function UseCaseDetail({ project, useCaseId, onNavigate, onScenarioCreated }: Us
         </Typography>
       )}
 
+      {/* DEMO-BETREUER: Szenario-Buttons ausgeblendet
       <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
         <Button variant="outlined" startIcon={<EditNoteIcon />} onClick={() => setDialogChangeType('modify')}>
           Ändern …
@@ -96,6 +98,8 @@ function UseCaseDetail({ project, useCaseId, onNavigate, onScenarioCreated }: Us
           Deaktivieren …
         </Button>
       </Stack>
+      */}
+      <TodoHint>Änderungsszenario für diesen Use Case anlegen (ändern, deaktivieren)</TodoHint>
 
       <Typography variant="body2" component="div" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
         {useCase.text}

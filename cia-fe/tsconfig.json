@@ -6,8 +6,9 @@
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    // DEMO-BETREUER: vorher beide true; auskommentierte Funktionen lassen unbenutzte Variablen zurück
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "skipLibCheck": true,
     "noEmit": true,
     "types": ["vite/client"]
