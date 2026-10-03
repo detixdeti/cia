@@ -1,0 +1,79 @@
+# Trace-Links des Beispielsystems (Bibliothek).
+# Format nach Konzept 4.2: eine Zuordnung je Zeile, UC-Kennung -> Dateiname.
+# Mehrere Zuordnungen zu einem Use Case entstehen durch Wiederholung.
+
+# Ausleihe und Rueckgabe
+UC1 -> AusleihService.java
+UC1 -> Ausleihe.java
+UC1 -> Buch.java
+UC1 -> Mitglied.java
+UC1 -> VormerkService.java
+
+UC2 -> AusleihService.java
+UC2 -> Ausleihe.java
+UC2 -> Buch.java
+UC2 -> VormerkService.java
+
+UC7 -> AusleihService.java
+UC7 -> Ausleihe.java
+UC7 -> VormerkService.java
+
+# Mitglieder
+UC3 -> MitgliederVerwaltung.java
+UC3 -> Mitglied.java
+
+UC11 -> KassenService.java
+UC11 -> BeitragsRechner.java
+UC11 -> Mitglied.java
+UC11 -> GebuehrenKonto.java
+
+# Mahnwesen und Gebuehren
+UC4 -> MahnungService.java
+UC4 -> GebuehrenRechner.java
+UC4 -> GebuehrenKonto.java
+UC4 -> Ausleihe.java
+UC4 -> Mitglied.java
+
+UC10 -> KassenService.java
+UC10 -> GebuehrenKonto.java
+UC10 -> Mitglied.java
+
+UC15 -> ErinnerungService.java
+UC15 -> BenachrichtigungService.java
+UC15 -> AusleihService.java
+UC15 -> Ausleihe.java
+
+# Vormerkungen
+UC8 -> VormerkService.java
+UC8 -> Vormerkung.java
+UC8 -> Buch.java
+UC8 -> Mitglied.java
+
+UC9 -> VormerkService.java
+UC9 -> Vormerkung.java
+UC9 -> BenachrichtigungService.java
+UC9 -> AusleihService.java
+
+# Bestand
+UC5 -> Katalog.java
+UC5 -> Buch.java
+
+UC12 -> Katalog.java
+UC12 -> Buch.java
+UC12 -> IsbnPruefer.java
+
+UC13 -> Katalog.java
+UC13 -> Buch.java
+UC13 -> VormerkService.java
+
+# Auswertung
+UC14 -> StatistikService.java
+UC14 -> Monatsstatistik.java
+UC14 -> AusleihService.java
+UC14 -> GebuehrenKonto.java
+
+# UC6 (Oeffnungszeiten) und Konfiguration.java haben bewusst keine Zuordnung.
+
+# Absichtlich doppelt deklariert. Konzept 4.2: doppelte identische Zuordnungen
+# werden zusammengefasst, ohne daraus zusaetzliche Evidenz abzuleiten.
+UC1 -> Buch.java

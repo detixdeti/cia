@@ -1,0 +1,16 @@
+.env
+
+# Python
+.venv
+__pycache__
+*.db
+cia-be/workspaces
+
+# Frontend
+node_modules
+dist
+
+.idea
+/.idea/
+
+*.DS_Store

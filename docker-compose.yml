@@ -1,0 +1,24 @@
+services:
+  backend:
+    build: ./cia-be
+    env_file:
+      - path: .env # LLM settings
+        required: false
+    environment:
+      DATABASE_PATH: /data/cia.db
+      WORKSPACE_DIR: /data/workspaces # working copies with applied scenarios
+    volumes:
+      - ./fixtures:/fixtures:ro
+      - cia-data:/data # scenarios and analysis results survive restarts
+    ports:
+      - "8000:8000" # only needed to open the API docs at http://localhost:8000/docs
+
+  frontend:
+    build: ./cia-fe
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  cia-data:
