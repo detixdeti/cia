@@ -1,6 +1,8 @@
 services:
   backend:
-    build: ./cia-be
+    build:
+      context: .
+      dockerfile: cia-be/Dockerfile
     env_file:
       - path: .env # LLM settings
         required: false

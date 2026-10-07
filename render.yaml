@@ -1,0 +1,41 @@
+# Render Blueprint: creates backend and frontend in one go (Dashboard -> New -> Blueprint).
+# Values with "sync: false" are asked for once when the Blueprint is created.
+services:
+  # Backend: private service, only reachable through the frontend (and its password)
+  - type: pserv
+    name: cia-backend
+    runtime: docker
+    plan: starter # the free plan has no disk, the database would be lost on every restart
+    dockerfilePath: ./cia-be/Dockerfile
+    dockerContext: .
+    disk:
+      name: cia-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_PATH
+        value: /data/cia.db
+      - key: WORKSPACE_DIR
+        value: /data/workspaces
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        value: qwen/qwen3.8-27b:free
+
+  # Frontend: nginx serves the React app and forwards /api to the backend
+  - type: web
+    name: cia-frontend
+    runtime: docker
+    plan: free # sleeps after inactivity, the first request then takes about a minute
+    dockerfilePath: ./cia-fe/Dockerfile
+    dockerContext: ./cia-fe
+    envVars:
+      - key: BACKEND_HOSTPORT
+        fromService:
+          type: pserv
+          name: cia-backend
+          property: hostport
+      - key: BASIC_AUTH_USER
+        value: studie
+      - key: BASIC_AUTH_PASSWORD
+        sync: false

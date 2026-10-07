@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   AppBar,
   Box,
+  Button,
   ButtonBase,
   Chip,
   IconButton,
@@ -15,6 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
@@ -26,6 +28,9 @@ import Logo from './components/Logo';
 import ConfirmDialog from './components/ConfirmDialog';
 
 export type Page = 'overview' | 'mapping' | 'scenarios';
+
+// Link to the questionnaire of the user study. As long as it is empty, the button is disabled.
+const SURVEY_URL: string = '';
 
 interface TopBarProps {
   page: Page;
@@ -98,6 +103,22 @@ export default function TopBar({
               />
             </Tooltip>
           )}
+
+          <Tooltip title={SURVEY_URL ? 'Umfrage in einem neuen Tab öffnen' : 'Der Link zur Umfrage folgt'}>
+            {/* span: a disabled button cannot show a tooltip itself */}
+            <span>
+              <Button
+                variant="contained"
+                startIcon={<AssignmentOutlinedIcon />}
+                href={SURVEY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                disabled={!SURVEY_URL}
+              >
+                Zur Umfrage
+              </Button>
+            </span>
+          </Tooltip>
 
           <TextField
             select

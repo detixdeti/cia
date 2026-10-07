@@ -1,11 +1,15 @@
+# ${PORT} and ${BACKEND_HOSTPORT} are filled in by the nginx image when the container starts.
 server {
-    listen 80;
+    listen ${PORT};
 
     root /usr/share/nginx/html;
     index index.html;
 
+    # Password protection, written by basic-auth.sh (empty when no password is set)
+    include /etc/nginx/basic-auth.conf;
+
     location /api/ {
-        proxy_pass http://backend:8000;
+        proxy_pass http://${BACKEND_HOSTPORT};
     }
 
     # Built files have a hash in their name, so they can be cached for good.
