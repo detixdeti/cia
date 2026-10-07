@@ -8,6 +8,10 @@ services:
     plan: starter # the free plan has no disk, the database would be lost on every restart
     dockerfilePath: ./cia-be/Dockerfile
     dockerContext: .
+    buildFilter: # only rebuild when backend or fixtures change
+      paths:
+        - cia-be/**
+        - fixtures/**
     disk:
       name: cia-data
       mountPath: /data
@@ -29,6 +33,9 @@ services:
     plan: free # sleeps after inactivity, the first request then takes about a minute
     dockerfilePath: ./cia-fe/Dockerfile
     dockerContext: ./cia-fe
+    buildFilter: # only rebuild when the frontend changes
+      paths:
+        - cia-fe/**
     envVars:
       - key: BACKEND_HOSTPORT
         fromService:
