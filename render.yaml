@@ -24,7 +24,7 @@ services:
       - key: LLM_API_KEY
         sync: false
       - key: LLM_MODEL
-        value: qwen/qwen3.8-27b:free
+        value: nvidia/nemotron-3-super-120b-a12b:free
 
   # Frontend: nginx serves the React app and forwards /api to the backend
   - type: web

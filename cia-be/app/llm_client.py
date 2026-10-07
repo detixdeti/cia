@@ -15,7 +15,7 @@ from dataclasses import dataclass
 import httpx
 
 LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "https://openrouter.ai/api/v1")
-LLM_MODEL = os.environ.get("LLM_MODEL", "qwen/qwen3.8-27b:free")
+LLM_MODEL = os.environ.get("LLM_MODEL", "nvidia/nemotron-3-super-120b-a12b:free")
 LLM_API_KEY = os.environ.get("LLM_API_KEY", "")
 # Optional: pin OpenRouter to one provider, e.g. "google-ai-studio"
 LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "")
